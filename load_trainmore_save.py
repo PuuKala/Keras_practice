@@ -9,8 +9,15 @@ from keras.layers import Dense, Flatten, MaxPool2D, Conv2D, Dropout
 from numpy import array
 
 
-def load_trainmore_save(file_name, data):
-    return False
+def load_trainmore_save(file_name, data, labels):
+    try:
+        model_ = load_model(file_name)
+    except OSError:
+        return False
+    print("File loaded, training...")
+    model_.fit(data, labels)
+    model_.save(file_name)
+    return True
 
 
 def make_VGGlike_convnet():
@@ -35,7 +42,7 @@ def make_VGGlike_convnet():
 
 
 if __name__ == "__main__":
-    from cv2 import VideoCapture, cvtColor, COLOR_BGR2GRAY, imshow, waitKey, resize
+    from cv2 import VideoCapture, imshow, waitKey, resize
     label = (input(
         "Write whether the label to the camera cap is true\n") in ["1", "true", "True", "yes", "Yes", "y", "Y"])
     if label:
@@ -64,11 +71,13 @@ if __name__ == "__main__":
 
     file_name = "saved_model.h5"
 
-    if load_trainmore_save(file_name, data)==False:
+    try:
+        model = load_model(file_name)
+    except OSError:
+        print("No saved model found, can not check the accuracy before training.")
+
+    if not load_trainmore_save(file_name, data, labels):
         print("No saved model found, making a new one and training it...")
         model = make_VGGlike_convnet()
         model.fit(data, labels)
-    else:
-        model = load_model(file_name)
-    
-    model.save(file_name)
+        model.save(file_name)
