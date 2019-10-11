@@ -15,7 +15,7 @@ def load_trainmore_save(file_name, data, labels):
     except OSError:
         return False
     print("File loaded, training...")
-    model_.fit(data, labels)
+    model_.fit(data, labels, epochs=2)
     model_.save(file_name)
     print("File saved as", file_name)
     return True
@@ -73,20 +73,24 @@ if __name__ == "__main__":
         print("Saved model found, evaluating current accuracy...")
         preds = model.predict(data)
         accuracy_0 = 0
+        avg_0 = 0
         accuracy_1 = 0
+        avg_1 = 0
         for pred_i in range(len(preds)):
-            if pred_i > n_pics:
-                if preds[i][0] < 0.5:
-                    accuracy_0 += 1
-            else:
-                if preds[i][0] >= 0.5:
+            if pred_i >= n_pics:
+                if preds[pred_i][0] >= 0.5:
                     accuracy_1 += 1
-        print("Percentage correct:\nLabel 0:", accuracy_0, "\nLabel 1:", accuracy_1)
+                    avg_1 += preds[pred_i][0]
+            else:
+                if preds[pred_i][0] < 0.5:
+                    accuracy_0 += 1
+                    avg_0 += preds[pred_i][0]
+        print("Percentage correct:\nLabel 0:", accuracy_0, "\nLabel 1:", accuracy_1, "\nAverages:\nLabel 0:", avg_0/100, "\nLabel 1:", avg_1/100)
     except OSError:
         print("No saved model found, can not check the accuracy before training.")
 
     if not load_trainmore_save(file_name, data, labels):
         print("No saved model found, making a new one and training it...")
         model = make_VGGlike_convnet()
-        model.fit(data, labels)
+        model.fit(data, labels, epochs=2)
         model.save(file_name)
