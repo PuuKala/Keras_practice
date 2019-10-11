@@ -17,6 +17,7 @@ def load_trainmore_save(file_name, data, labels):
     print("File loaded, training...")
     model_.fit(data, labels)
     model_.save(file_name)
+    print("File saved as", file_name)
     return True
 
 
@@ -36,36 +37,32 @@ def make_VGGlike_convnet():
     model_.add(Flatten())
     model_.add(Dense(256, activation='relu'))
     model_.add(Dropout(0.3))
-    model_.add(Dense(2, activation='softmax'))
-    model_.compile(optimizer='SGD', loss='categorical_crossentropy')
+    model_.add(Dense(1, activation='sigmoid'))
+    model_.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model_
 
 
 if __name__ == "__main__":
     from cv2 import VideoCapture, imshow, waitKey, resize
-    label = (input(
-        "Write whether the label to the camera cap is true\n") in ["1", "true", "True", "yes", "Yes", "y", "Y"])
-    if label:
-        label = [1, 0]
-    else:
-        label = [0, 1]
-    print("Label:", label)
-
     cap = VideoCapture(0)
 
     data = []
     labels = []
-    for n_pics in range(100):
-        frame = cap.read()  # Returns [bool Success, mat img]
-        frame = resize(frame[1], (80, 60))
 
-        data.append(frame)
-        labels.append(label)
+    for i in range(2):
+        input("Take for label " + str(i) + "\nPress ENTER to take")
+        for n_pics in range(100):
+            frame = cap.read()  # Returns [bool Success, mat img]
+            frame = resize(frame[1], (80, 60))
 
-        imshow("Kuva", frame)
-        waitKey(1)
+            data.append(frame)
+            labels.append(i)
 
-    print(n_pics+1, "images taken with all images labelled as", str(label))
+            imshow("Kuva", frame)
+            waitKey(1)
+
+    cap.release()
+
     data = array(data)
     labels = array(labels)
 
@@ -73,6 +70,18 @@ if __name__ == "__main__":
 
     try:
         model = load_model(file_name)
+        print("Saved model found, evaluating current accuracy...")
+        preds = model.predict(data)
+        accuracy_0 = 0
+        accuracy_1 = 0
+        for pred_i in range(len(preds)):
+            if pred_i > n_pics:
+                if preds[i][0] < 0.5:
+                    accuracy_0 += 1
+            else:
+                if preds[i][0] >= 0.5:
+                    accuracy_1 += 1
+        print("Percentage correct:\nLabel 0:", accuracy_0, "\nLabel 1:", accuracy_1)
     except OSError:
         print("No saved model found, can not check the accuracy before training.")
 
