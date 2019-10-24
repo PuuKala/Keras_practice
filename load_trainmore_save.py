@@ -1,3 +1,8 @@
+## @file load_trainmore_save.py
+# Definition for a simple function, which loads a saved model, trains it with
+# given data for 2 epochs and saves it.
+#
+# This is mainly for practice instead of having actually something useful.
 from warnings import simplefilter
 
 # Ignore FutureWarnings from keras
@@ -8,15 +13,28 @@ from keras.layers import Dense, Flatten, MaxPool2D, Conv2D, Dropout
 
 from numpy import array
 
-
+## Loads model from a file with given file_name, trains it with data and saves it.
+#
+# Parameters:
+#  string file_name: The name of the file
+#  np.array data: The data for training
+#  np.array labels: The labels for the training data
+# Returns:
+#  bool success: Function ran without problems
 def load_trainmore_save(file_name, data, labels):
-    # Try loading and if loading succeeded, train the model and save it
+    # Try loading, try training and if succeeded, save it
+    print("Loading model with filename", file_name)
     try:
         model_ = load_model(file_name)
     except OSError:
+        print("Loading model failed!")
         return False
     print("File loaded, training...")
-    model_.fit(data, labels, epochs=2)
+    try:
+        model_.fit(data, labels, epochs=2)
+    except Exception as e:
+        print("Exception!\n", e.message)
+        return False
     model_.save(file_name)
     print("File saved as", file_name)
     return True
